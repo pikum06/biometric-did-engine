@@ -1,6 +1,5 @@
 biometric_did/
 data/
-output/
-__pycache__/
-*.csv
+creditcard.csv
 *.h5
+__pycache__/
