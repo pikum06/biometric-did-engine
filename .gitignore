@@ -3,3 +3,4 @@ data/
 creditcard.csv
 *.h5
 __pycache__/
+research/fraud-detection-pipeline.ipynb
