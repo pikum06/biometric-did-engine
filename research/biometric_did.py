@@ -64,8 +64,8 @@ def load_all_assets():
     from keras_facenet import FaceNet
     
     base_path = os.path.dirname(__file__)
-    model_path = os.path.join(base_path, 'fraud_detection_model.h5')
-    csv_path = os.path.join(base_path, 'creditcard.csv')
+    model_path = os.path.join(base_path, '../output/model/fraud_detection_model.h5')
+    csv_path = os.path.join(base_path, '../data/creditcard.csv')
     
     if not os.path.exists(model_path) or not os.path.exists(csv_path):
         st.error("Critical Files Missing! Ensure '.h5' and '.csv' are in the folder.")
@@ -131,7 +131,7 @@ if risk_score >= 0.3:
     st.header("AI Facial Verification")
     
     gender_prefix = user_gender.lower()
-    stored_img_name = f"{gender_prefix}_stored.jpg"
+    stored_img_name = f"../sample_images/male/{gender_prefix}_stored.jpg"
     stored_path = os.path.join(os.path.dirname(__file__), stored_img_name)
     
     c1, c2 = st.columns(2)
