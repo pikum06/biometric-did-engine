@@ -1,4 +1,4 @@
-# Risk-Adaptive Biometric Decentralized Identity (DID) Engine88
+# Risk-Adaptive Biometric Decentralized Identity (DID) Engine
 
 An interactive Web3 authentication gateway built with Streamlit. This application orchestrates an __AI Behavioral Fraud Engine with a FaceNet Biometric Verification Core__ to provide dynamic, risk-adapted authentication for Decentralized Identity (DID) token emission.
 
