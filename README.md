@@ -115,8 +115,8 @@ streamlit run src/biometric_did.py
 1. **Initialization Standby Screen:** Upon launching, click "Initialize Biometric AI Core" to boot TensorFlow, Keras-FaceNet, and the dataset into session state memory.
 2. **Control Panel Selection:** Select a Transaction ID index and target User Gender from the sidebar control panel.
 3. **Risk Score Evaluation:**
-        - Low Risk ($T_{risk} < 0.30$): Displays a "LOW RISK: Transaction Pre-Approved" banner and bypasses biometric challenges.
-        - High Risk ($T_{risk} \ge 0.30$): Displays a "HIGH RISK" warning and triggers the step-up "AI Facial Verification" challenge.
+   - Low Risk ($T_{risk} < 0.30$): Displays a "LOW RISK: Transaction Pre-Approved" banner and bypasses biometric challenges.
+   - High Risk ($T_{risk} \ge 0.30$): Displays a "HIGH RISK" warning and triggers the step-up "AI Facial Verification" challenge.
 4. **Biometric Scan & Verification:** Capture a face photo via camera input and click "Run AI Verification".
 5. **Token Generation:** If spatial distance $D_{cosine} < 0.60$, identity is confirmed, and a 16-character DID authorization token is emitted.
 
