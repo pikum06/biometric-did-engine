@@ -131,6 +131,26 @@ streamlit run src/biometric_did.py
 | Identity Decision Gate | Cosine Distance Cutoff ($T_{bio}$) | 0.60 | Identity confirmed if $D_{cosine} < 0.60$ |
 |DID Generation | Token Hash Format |	SHA-256 (16 chars) | Generates verifiable ephemeral session token |
 
+---
 
+## Dashboard Outcomes
+
+1. **Picture1.png**
+
+![Low Risk Pre-Approval Transaction](dashboard_outcomes/Picture1.png)
+
+Initially, the system detects low risk and shares pre-approval scores as shown in the above figure. 
+
+2. **Picture2.png**
+
+![High Risk Adaptive Challenge](dashboard_outcomes/Picture2.png)
+
+Once high-risk transaction ID is entered, the system first detects the behavioral Risk Score (0.9992), as shown above and triggered high risk asking for AI face detection and an Adaptive Biometric Challenge. Upon detecting the face, the system successfully validates identity a stored ledger identity with high confidence. The use of FaceNet architecture allows for hardware-agnostic deployment, ensuring institutional security remains consistent across varied mobile and desktop interfaces.
+
+3. **Picture3.png**
+
+![Security Mismatch Rejection](dashboard_outcomes/Picture3.png)
+
+In above figure, the hardware-agnostic model prevents the Sybil attacks and ensures that “proof of Personhood” for institutional DeFi governance. 
 
           
