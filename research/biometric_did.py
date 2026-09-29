@@ -6,7 +6,9 @@ from PIL import Image
 
 # 1. CORE BIOMETRIC ENGINE
 def verify_biometrics(live_file, stored_path, embedder):
-    "Ussing FaceNet embeddings to compare faces with Cosine Distance."
+    
+    "Using FaceNet embeddings to compare faces with Cosine Distance."
+    
     import cv2
     import numpy as np
     from scipy.spatial import distance
@@ -16,6 +18,7 @@ def verify_biometrics(live_file, stored_path, embedder):
             return 2.0
         
         # Loading and convert images to RGB
+
         img_stored = cv2.imread(stored_path)
         if img_stored is None:
             st.error(f"Could not read stored image at {stored_path}")
@@ -26,6 +29,7 @@ def verify_biometrics(live_file, stored_path, embedder):
         img_live = np.array(live_img.convert('RGB'))
 
         # AI LIGHTING NORMALIZATION (CLAHE)
+
         img_live_cv = cv2.cvtColor(img_live, cv2.COLOR_RGB2LAB)
         l, a, b = cv2.split(img_live_cv)
         clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
@@ -34,14 +38,17 @@ def verify_biometrics(live_file, stored_path, embedder):
         img_live = cv2.cvtColor(img_live_cv, cv2.COLOR_LAB2RGB)
         
         # Resize to FaceNet standard (160x160)
+
         img_stored = cv2.resize(img_stored, (160, 160))
         img_live = cv2.resize(img_live, (160, 160))
         
         # Generate 512-D Embeddings
+
         emb_stored = embedder.embeddings(np.expand_dims(img_stored, axis=0)).flatten()
         emb_live = embedder.embeddings(np.expand_dims(img_live, axis=0)).flatten()
         
         # Calculate Cosine Distance
+
         dist = distance.cosine(emb_stored, emb_live)
         return dist 
     except Exception as e:
@@ -49,6 +56,7 @@ def verify_biometrics(live_file, stored_path, embedder):
         return 2.0
 
 # 2. INITIALIZATION & ASSET LOADING
+
 st.set_page_config(page_title="Risk-Adaptive Biometric DID", layout="wide")
 
 if "models_loaded" not in st.session_state:
@@ -72,6 +80,7 @@ def load_all_assets():
         st.stop()
     
     # Load assets
+
     nn_model = tf.keras.models.load_model(model_path, compile=False)
     dataframe = pd.read_csv(csv_path)
     facenet_ai = FaceNet()
@@ -79,6 +88,7 @@ def load_all_assets():
     return facenet_ai, nn_model, dataframe
 
 # 3. THE INITIALIZATION SCREEN 
+
 if not st.session_state.models_loaded:
     st.title("Risk-Adaptive Biometric DID System")
     st.info("System Standby. Windows connection established.")
@@ -93,6 +103,7 @@ if not st.session_state.models_loaded:
     st.stop()
 
 # 4. MAIN INTERFACE 
+
 import numpy as np 
 embedder = st.session_state.embedder
 fraud_model = st.session_state.fraud_model
@@ -102,12 +113,14 @@ st.title("Risk-Adaptive Biometric DID System")
 st.write(f"Research Portfolio: Piyush Kumar")
 st.divider()
 
-# SIDEBAR
+# Sidebar Controls
+
 st.sidebar.header("Control Panel")
 tx_index = st.sidebar.number_input("Transaction ID", 0, len(df)-1, value=0)
 user_gender = st.sidebar.selectbox("User Gender", ["Male", "Female"])
 
-# RISK ENGINE
+# Risk Assessment
+
 raw_row = df.iloc[[tx_index]].copy()
 features = raw_row.drop(columns=['Class'], errors='ignore').iloc[:, :30]
 sample_tx = features.values.astype('float32').reshape(1, 30)
