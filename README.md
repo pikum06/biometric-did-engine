@@ -91,6 +91,20 @@ To run biometric_did.py successfully, organize your directory according to the r
     └── biometric_did.py               # Main Streamlit application
 ```
 
+---
+
+## Dataset & Behavioral Benchmarks
+
+The AI Behavioral Fraud Engine relies on the **Credit Card Fraud Detection** benchmark dataset to train its fraud risk prediction core prior to initiating step-up biometric challenges:
+
+* **Dataset**: [Credit Card Fraud Detection (Kaggle)](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud)
+* **Source**: Machine Learning Group - ULB
+* **Dataset Characteristics**: Contains 284,807 European cardholder transactions across two days, featuring 492 fraudulent transactions (0.172% imbalance ratio).
+* **Features**: Includes 28 PCA-transformed numerical features ($V1$ to $V28$) along with transaction `Time` and `Amount`.
+* **Pipeline Integration**: Acts as the behavioral feature baseline for risk scoring; transactions exceeding the risk threshold ($\text{Risk Score} \ge 0.30$) trigger step-up optical camera scanning and FaceNet verification.
+
+---
+
 ## Installation & Setup
 
 1. **Clone Repository**
