@@ -1,6 +1,11 @@
-biometric_did/
-data/
-creditcard.csv
-*.h5
 __pycache__/
-research/fraud-detection-pipeline.ipynb
+*.py[cod]
+*.class
+.ipynb_checkpoints
+.env
+.venv/
+env/
+venv/
+*.Zone.Identifier
+.DS_Store
+data/creditcard.csv
