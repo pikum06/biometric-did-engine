@@ -144,7 +144,7 @@ if risk_score >= 0.3:
     st.header("AI Facial Verification")
     
     gender_prefix = user_gender.lower()
-    stored_img_name = f"../sample_images/male/{gender_prefix}_stored.jpg"
+    stored_img_name = f"../sample_images/male/{gender_prefix}_store1.jpg"
     stored_path = os.path.join(os.path.dirname(__file__), stored_img_name)
     
     c1, c2 = st.columns(2)
