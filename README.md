@@ -1,94 +1,89 @@
-# Risk-Adaptive Biometric Decentralized Identity (DID) Engine
+# Credit card Fraud Detection Engine
 
-An interactive Web3 authentication gateway built with Streamlit. This application orchestrates an __AI Behavioral Fraud Engine with a FaceNet Biometric Verification Core__ to provide dynamic, risk-adapted authentication for Decentralized Identity (DID) token emission.
+---
+
+A modular machine learning pipeline built to detect fraudulent credit card transactions for the Biometric DID System. The pipeline automates data cleaning, exploratory data analysis (EDA), feature engineering, and neural network model training with targeted evaluation thresholding.
+
+---
 
 ## Architecture Overview
 
-The application executes a multi-stage risk-adaptive verification pipeline:
+The pipeline is orchestrated sequentially by `main.py` across four modular Python scripts located in the `research/` directory:
 
 ```text
-
-[ Select Transaction ID & Demographics ]
-                   │
-                   ▼
-[ 30-D Behavioral Feature Extraction ]
-                   │
-                   ▼
-[ Deep Neural Network Fraud Prediction ]
-                   │
-         ┌─────────┴─────────┐
-         ▼                   ▼
- Risk Score < 0.30   Risk Score ≥ 0.30
- (Low Risk Path)     (High Risk Path)
-         │                   │
-         ▼                   ▼
- [ Auto-Pre-Approve ]  [ Step-Up AI Facial Verification ]
-                             │
-                             ▼
-                       [ Optical Camera Scan / File Upload ]
-                             │
-                             ▼
-                       [ LAB CLAHE Lighting Normalization ]
-                             │
-                             ▼
-                       [ 512-D FaceNet Vector Embedding ]
-                             │
-                             ▼
-                       [ Cosine Distance Verification ]
-                             │
-                   ┌─────────┴─────────┐
-                   ▼                   ▼
-            Distance < 0.60     Distance ≥ 0.60
-            (Identity Match)   (Identity Mismatch)
-                   │                   │
-                   ▼                   ▼
-          [ SHA-256 DID Token ] [ Block Transaction ]
+[ ../data/creditcard.csv ] (Raw Data: 284,807 rows)
+            │
+            ▼
+┌───────────────────────┐
+│   data_cleaning.py    │ ──► Identifies & removes nulls + duplicate rows
+└───────────────────────┘     Saves: ../data/creditcard_cleaned.csv
+            │
+            ▼
+┌───────────────────────┐
+│   data_analysis.py    │ ──► Generates 5 EDA plots (Log distribution, KDE, Boxplots)
+└───────────────────────┘     Saves: ../output/graphs/*.png
+            │
+            ▼
+┌───────────────────────┐
+│ feature_engineering.py│ ──► StandardScales 'Amount' & 'Time', drops raw columns,
+└───────────────────────┘     performs stratified 80/20 train/test split
+            │
+            ▼
+┌───────────────────────┐
+│       model.py        │ ──► Trains Keras Sequential Neural Network
+└───────────────────────┘     Evaluates using 0.35 probability threshold
+            │
+            ├──► Saves Tabular Metrics: ../output/csv/classification_report.csv
+            ├──► Saves Confusion Matrix: ../output/graphs/confusion_matrix.png
+            └──► Saves Model File: ../output/model/fraud_detection_model.h5
 
 ```
-## Key Features
-1. **Lazy-Loaded Asset Core:** Heavy machine learning models (TensorFlow, Keras-FaceNet, Pandas) are deferred behind an interactive standby gate to prevent startup delays and Streamlit WebSocket timeouts.
-2. **Behavioral Risk Engine:** Evaluates a 30-dimensional feature vector from transaction records using a pre-trained Deep Neural Network (fraud_detection_model.h5) to generate a continuous risk score between $0.0000$ and $1.0000$.
-3. **CLAHE Computer Vision Enhancement:** Pre-processes optical images by converting RGB frames to the LAB color space and applying Contrast Limited Adaptive Histogram Equalization (CLAHE) to the Luminance ($L$) channel (clip limit 3.0, grid size $8 \times 8$) to normalize lighting variations.
-4. **FaceNet Vector Embeddings:** Resizes live and reference images to $160 \times 160$ pixels and extracts 512-dimensional normalized feature embeddings via Keras-FaceNet.  Cosine Distance Identity Matching: Calculates spatial Cosine Distance between stored reference profiles and live optical captures:
 
-$$D_{cosine}(u, v) = 1 - \frac{u \cdot v}{\Vert{}u\Vert{}_2 \Vert{}v\Vert{}_2}$$
-
-An identity match is confirmed if $D_{cosine} < 0.60$. 
-
-5. **Ephemeral DID Token Emission:** Generates a unique 16-character SHA-256 hash combined with a temporal timestamp upon successful identity verification.
+---
 
 ## System Requirements & Dependencies
+
 1. Python Version: Python 3.9 – 3.11
 
 2. Hardware: Webcam access for live facial optical capture
 
-## Dependencies 
-1. streamlit
-2. opencv-python / opencv-python-headless
+## Core Python Packages (`requirements.txt`) 
+1. pandas
+2. matplotlib
 3. numpy
-4. pandas
-5. pillow
-6. scipy
+4. seaborn
+5. scikit-learn
+6. keras
 7. tensorflow
-8. keras-facenet
 
+---
 
 ## Project Directory Structure
+
 To run biometric_did.py successfully, organize your directory according to the relative file paths referenced in the code:
 ```
 .
-├── data/
-│   └── creditcard.csv                 # Transaction dataset (30 PCA features)
 ├── output/
+│   ├── csv/
+│   │   └── classification_report.csv            # Tabular classification report (4 decimal precision)
+│   ├── graphs/
+│   │   ├── amount_distribution.png               # Log-scale transaction amount KDE
+│   │   ├── class_distribution.png                # Log-scale class count plot with annotations
+│   │   ├── confusion_matrix.png                  # Evaluation heatmap
+│   │   ├── discriminative_features_boxplot.png   # Boxplots for top PCA features (V14, V17, V12, V10)
+│   │   ├── time_distribution.png                 # Transaction density over time
+│   │   └── top_correlation_heatmap.png           # Heatmap of top correlated features
 │   └── model/
-│       └── fraud_detection_model.h5   # Pre-trained TensorFlow model
-├── sample_images/
-│   ├── male/
-│   │   └── male_stored.jpg            # Reference male identity profile
-│   └── female/
-│       └── female_stored.jpg          # Reference female identity profile
-└── src/
-    └── biometric_did.py               # Main Streamlit application
+│       └── fraud_detection_model.h5             # Serialized trained Keras neural network model
+├── research/
+│   ├── data_analysis.py                          # Exploratory data analysis & graph generation module
+│   ├── data_cleaning.py                         # Data cleaning & deduplication module
+│   ├── feature_engineering.py                    # Feature scaling & stratified train/test split module
+│   ├── main.py                                   # Pipeline master entry point script
+│   └── model.py                                  # Keras Neural Network build, train, & evaluation module
+├── .gitignore
+├── README.md
+└── requirements.txt                             # Project Python dependencies
 ```
 
 ---
@@ -108,63 +103,86 @@ The AI Behavioral Fraud Engine relies on the **Credit Card Fraud Detection** ben
 ## Installation & Setup
 
 1. **Clone Repository**
-git clone https://github.com/your-username/biometric-did-engine.git
-cd biometric-did-engine
+* `git clone [https://github.com/pikum06/biometric-did-engine.git](https://github.com/pikum06/biometric-did-engine.git)`
+* `cd biometric-did-engine`
 
 2. **Create and Activate a Virtual Environment:**
-python3 -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+* `python3 -m venv .venv`
+* `source .venv/bin/activate`  # On Windows: `.venv\Scripts\activate`
 
 3. **Install Core Dependencies:**
-pip install streamlit pandas numpy tensorflow keras-facenet opencv-python pillow scipy
+* `pip install streamlit pandas numpy tensorflow keras-facenet opencv-python pillow scipy`
 
-4. **Verify Asset Placement:**
-Ensure creditcard.csv, fraud_detection_model.h5, and profile images are in their respective relative directories.
+4. **Dataset Placement**
+*Ensure your raw dataset creditcard.csv is placed in the data/ directory at the project root level: `data/creditcard.csv`.
 
 5. **Running the Application**
-Launch the interface using Streamlit:
-streamlit run src/biometric_did.py
+* `cd research`
+* `python3 main.py`
 
-## Application Execution Flow
-1. **Initialization Standby Screen:** Upon launching, click "Initialize Biometric AI Core" to boot TensorFlow, Keras-FaceNet, and the dataset into session state memory.
-2. **Control Panel Selection:** Select a Transaction ID index and target User Gender from the sidebar control panel.
-3. **Risk Score Evaluation:**
-   - Low Risk ($T_{risk} < 0.30$): Displays a "LOW RISK: Transaction Pre-Approved" banner and bypasses biometric challenges.
-   - High Risk ($T_{risk} \ge 0.30$): Displays a "HIGH RISK" warning and triggers the step-up "AI Facial Verification" challenge.
-4. **Biometric Scan & Verification:** Capture a face photo via camera input and click "Run AI Verification".
-5. **Token Generation:** If spatial distance $D_{cosine} < 0.60$, identity is confirmed, and a 16-character DID authorization token is emitted.
+### Pipeline Steps Executed by main.py:
 
-## Thresholds & Parameters Summary
-| Pipeline Stage | Parameter / Metric | Configured Value | Function |
-| -------------- | ------------------ | ---------------- | -------- |
-| Risk Scoring | Risk Decision Threshold ($T_{risk}$) | 0.30 | Triggers step-up biometric challenge if $T_{risk} \ge 0.30$ |
-| CLAHE Normalization |	Clip Limit | 3.0 | Controls local contrast enhancement in LAB space |
-| CLAHE Normalization | Tile Grid Size |	8 x 8 | Defines grid matrix size for local histogram balancing |
-| Image Pre-processing | Model Input Dimensions | 160 x 160 | Resizes RGB images to FaceNet input specifications |
-| Biometric Embedding | Vector Dimensionality |	512-D | Spatial feature vector extracted per facial frame |
-| Identity Decision Gate | Cosine Distance Cutoff ($T_{bio}$) | 0.60 | Identity confirmed if $D_{cosine} < 0.60$ |
-|DID Generation | Token Hash Format |	SHA-256 (16 chars) | Generates verifiable ephemeral session token |
+1. **`data_cleaning.py:`** Reads `../data/creditcard.csv`, scans for null values and duplicate rows, removes detected duplicate entries (~1,081 rows), and outputs `../data/creditcard_cleaned.csv.`
+
+2. **`data_analysis.py:`** Loads the cleaned CSV and exports 5 high-resolution visualization graphs to `../output/graphs/`.
+
+3. **`feature_engineering.py:`** Fits StandardScaler to Amount and Time features, drops the raw unscaled columns, and performs a stratified 80/20 train/test split.
+
+4. **`model.py:`**
+
+* Constructs a 4-layer Keras Sequential Neural Network (`Dense(32) -> Dropout(0.2) -> Dense(16) -> Dense(1, sigmoid)`).
+
+* Compiles with `adam` optimizer and `binary_crossentropy` loss.
+
+* Trains over 10 epochs with a batch size of 2048.
+
+* Predicts test set probabilities and applies an optimized decision threshold of `0.35`.
+
+* Exports `classification_report.csv` to `../output/csv/`, `confusion_matrix.png` to `../output/graphs/`, and saves the compiled model `fraud_detection_model.h5` to `../output/model/`. 
 
 ---
 
-## Dashboard Outcomes
+## Output Graphs
 
-1. **Picture1.png**
+1. **class_distribution.png**
 
-![Low Risk Pre-Approval Transaction](dashboard_outcomes/Picture1.png)
+![Log-Scaled Class Distribution Analysis](output/graphs/class_distribution.png)
 
-Initially, the system detects low risk and shares pre-approval scores as shown in the above figure. 
+This figure demonstrates the extreme class imbalance in the credit card transaction dataset following deduplication (283,253 legitimate transactions vs. 473 fraudulent instances). Plotting the distribution on a logarithmic Y-axis ($10^0$ to $10^6$) with explicit count annotations preserves sample magnitude while rendering the minority fraud class clearly visible as shown in the above figure.
 
-2. **Picture2.png**
+2. **amount_distribution.png**
 
-![High Risk Adaptive Challenge](dashboard_outcomes/Picture2.png)
+![Transaction Amount Density Overlay](output/graphs/amount_distribution.png)
 
-Once high-risk transaction ID is entered, the system first detects the behavioral Risk Score (0.9992), as shown above and triggered high risk asking for AI face detection and an Adaptive Biometric Challenge. Upon detecting the face, the system successfully validates identity a stored ledger identity with high confidence. The use of FaceNet architecture allows for hardware-agnostic deployment, ensuring institutional security remains consistent across varied mobile and desktop interfaces.
+A Kernel Density Estimation (KDE) plot overlaying transaction amounts on a logarithmic scale ($10^{-1}$ to $10^4$ USD). Legitimate transactions (Class 0) exhibit multi-modal spending clusters across standard commercial payment tiers, whereas fraudulent transactions (Class 1) display a bimodal concentration around micro-card testing and high-value liquidity drains, proving transaction magnitude serves as a strong behavioral indicator as shown in the above figure.
 
-3. **Picture3.png**
+3. **time_distribution.png**
 
-![Security Mismatch Rejection](dashboard_outcomes/Picture3.png)
+![Temporal Density Analysis](output/graphs/time_distribution.png)
 
-In above figure, the hardware-agnostic model prevents the Sybil attacks and ensures that “proof of Personhood” for institutional DeFi governance. 
+Kernel density estimation of transaction timestamps elapsed over two complete diurnal cycles ($0$ to $172,800$ seconds). Normal transaction volume exhibits distinct human circadian rhythm troughs during off-peak night windows (~$75,000$ to $110,000$ seconds), whereas fraudulent activity maintains an elevated relative density during low-volume off-peak hours, establishing temporal execution timing as a key discriminative feature as shown in the above figure.
+
+4. **top_correlation_heatmap.png**
+
+![Feature Correlation Matrix](output/graphs/top_correlation_heatmap.png)
+
+Pearson correlation matrix isolating the top 12 principal component features exhibiting the strongest linear relationship with the target fraud variable. The heatmap identifies key inverse correlations ($V_{17} = -0.31$, $V_{14} = -0.29$, $V_{12} = -0.25$, $V_{10} = -0.21$) and positive correlations ($V_{11} = +0.15$, $V_{4} = +0.13$) that drive the neural network's boundary separation as shown in the above figure.
+
+5. **discriminative_features_boxplot.png**
+
+![Top Discriminative PCA Feature Separation](output/graphs/discriminative_features_boxplot.png)
+
+Comparative boxplots analyzing the distribution of the four most discriminative PCA features ($V_{14}$, $V_{17}$, $V_{12}$, and $V_{10}$) across normal and fraudulent classes. The plots illustrate distinct structural separation in feature space, where fraudulent transactions consistently exhibit significant negative median shifts and heavy lower-tail outlier spreads compared to normal transactions as shown in the above figure.
+
+6. **confusion_matrix.png**
+
+![Neural Network Model Confusion Matrix](output/graphs/confusion_matrix.png)
+
+Confusion matrix heatmap evaluating neural network predictions on the held-out 20% test dataset (56,746 samples) at an optimized decision threshold of $T_{\text{risk}} = 0.35$. The model achieves 56,641 True Negatives and 68 True Positives (detecting 71.6% of unique fraud cases) while keeping False Positives constrained to 10 as shown in the above figure.
+
+---
+
+
+
 
           
