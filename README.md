@@ -103,22 +103,23 @@ The AI Behavioral Fraud Engine relies on the **Credit Card Fraud Detection** ben
 ## Installation & Setup
 
 1. **Clone Repository**
-* `git clone [https://github.com/pikum06/biometric-did-engine.git](https://github.com/pikum06/biometric-did-engine.git)`
-* `cd biometric-did-engine`
+    * `git clone [https://github.com/pikum06/biometric-did-engine.git](https://github.com/pikum06/biometric-did-engine.git)`
+    * `cd biometric-did-engine`
 
 2. **Create and Activate a Virtual Environment:**
-* `python3 -m venv .venv`
-* `source .venv/bin/activate`  # On Windows: `.venv\Scripts\activate`
+    * `python3 -m venv .venv`
+    * `source .venv/bin/activate`  # On Windows: `.venv\Scripts\activate`
 
 3. **Install Core Dependencies:**
-* `pip install streamlit pandas numpy tensorflow keras-facenet opencv-python pillow scipy`
+    * `pip install streamlit pandas numpy tensorflow keras-facenet opencv-python pillow scipy`
 
 4. **Dataset Placement**
-*Ensure your raw dataset creditcard.csv is placed in the data/ directory at the project root level: `data/creditcard.csv`.
 
-5. **Running the Application**
-* `cd research`
-* `python3 main.py`
+* Ensure your raw dataset `creditcard.csv` is placed in the data/ directory at the project root level: `data/creditcard.csv`.
+
+6. **Running the Application**
+    * `cd research`
+    * `python3 main.py`
 
 ### Pipeline Steps Executed by main.py:
 
