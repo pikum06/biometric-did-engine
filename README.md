@@ -1,6 +1,10 @@
 # Risk-Adaptive Biometric Decentralized Identity (DID) Engine
 
+---
+
 An interactive Web3 authentication gateway built with Streamlit. This application orchestrates an __AI Behavioral Fraud Engine with a FaceNet Biometric Verification Core__ to provide dynamic, risk-adapted authentication for Decentralized Identity (DID) token emission.
+
+---
 
 ## Architecture Overview
 
@@ -45,6 +49,9 @@ The application executes a multi-stage risk-adaptive verification pipeline:
           [ SHA-256 DID Token ] [ Block Transaction ]
 
 ```
+
+---
+
 ## Key Features
 1. **Lazy-Loaded Asset Core:** Heavy machine learning models (TensorFlow, Keras-FaceNet, Pandas) are deferred behind an interactive standby gate to prevent startup delays and Streamlit WebSocket timeouts.
 2. **Behavioral Risk Engine:** Evaluates a 30-dimensional feature vector from transaction records using a pre-trained Deep Neural Network (fraud_detection_model.h5) to generate a continuous risk score between $0.0000$ and $1.0000$.
@@ -57,7 +64,10 @@ An identity match is confirmed if $D_{cosine} < 0.60$.
 
 5. **Ephemeral DID Token Emission:** Generates a unique 16-character SHA-256 hash combined with a temporal timestamp upon successful identity verification.
 
+---
+
 ## System Requirements & Dependencies
+
 1. Python Version: Python 3.9 – 3.11
 
 2. Hardware: Webcam access for live facial optical capture
@@ -72,6 +82,7 @@ An identity match is confirmed if $D_{cosine} < 0.60$.
 7. tensorflow
 8. keras-facenet
 
+---
 
 ## Project Directory Structure
 To run biometric_did.py successfully, organize your directory according to the relative file paths referenced in the code:
@@ -96,22 +107,24 @@ To run biometric_did.py successfully, organize your directory according to the r
 ## Installation & Setup
 
 1. **Clone Repository**
-git clone https://github.com/your-username/biometric-did-engine.git
-cd biometric-did-engine
+    * `git clone https://github.com/your-username/biometric-did-engine.git`
+    * `cd biometric-did-engine`
 
 2. **Create and Activate a Virtual Environment:**
-python3 -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+    * `python3 -m venv .venv`
+    * `source .venv/bin/activate`  # On Windows: `.venv\Scripts\activate`
 
 3. **Install Core Dependencies:**
-pip install streamlit pandas numpy tensorflow keras-facenet opencv-python pillow scipy
+    * `pip install streamlit pandas numpy tensorflow keras-facenet opencv-python pillow scipy`
 
 4. **Verify Asset Placement:**
-Ensure creditcard.csv, fraud_detection_model.h5, and profile images are in their respective relative directories.
+* Ensure `creditcard.csv`, `fraud_detection_model.h5`, and profile images are in their respective relative directories.
 
 5. **Running the Application**
-Launch the interface using Streamlit:
-streamlit run src/biometric_did.py
+* Launch the interface using Streamlit:
+    * `streamlit run src/biometric_did.py`
+
+---
 
 ## Application Execution Flow
 1. **Initialization Standby Screen:** Upon launching, click "Initialize Biometric AI Core" to boot TensorFlow, Keras-FaceNet, and the dataset into session state memory.
@@ -121,6 +134,8 @@ streamlit run src/biometric_did.py
    - High Risk ($T_{risk} \ge 0.30$): Displays a "HIGH RISK" warning and triggers the step-up "AI Facial Verification" challenge.
 4. **Biometric Scan & Verification:** Capture a face photo via camera input and click "Run AI Verification".
 5. **Token Generation:** If spatial distance $D_{cosine} < 0.60$, identity is confirmed, and a 16-character DID authorization token is emitted.
+
+---
 
 ## Thresholds & Parameters Summary
 | Pipeline Stage | Parameter / Metric | Configured Value | Function |
@@ -155,4 +170,5 @@ Once high-risk transaction ID is entered, the system first detects the behaviora
 
 In above figure, the hardware-agnostic model prevents the Sybil attacks and ensures that “proof of Personhood” for institutional DeFi governance. 
 
+---
           
