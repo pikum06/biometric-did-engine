@@ -8,54 +8,52 @@ An interactive Web3 authentication gateway built with Streamlit. This applicatio
 
 ## Architecture Overview
 
-The application executes a multi-stage risk-adaptive verification pipeline:
+The application executes a multi-stage risk-adaptive verification and on-chain broadcasting pipeline:
 
 ```text
-
 [ Select Transaction ID & Demographics ]
                    │
-                   ▼
 [ 30-D Behavioral Feature Extraction ]
                    │
-                   ▼
 [ Deep Neural Network Fraud Prediction ]
                    │
          ┌─────────┴─────────┐
-         ▼                   ▼
  Risk Score < 0.30   Risk Score ≥ 0.30
- (Low Risk Path)     (High Risk Path)
+  (Low Risk Path)     (High Risk Path)
          │                   │
-         ▼                   ▼
- [ Auto-Pre-Approve ]  [ Step-Up AI Facial Verification ]
+[ Auto-Pre-Approve ]  [ Step-Up AI Facial Verification ]
                              │
-                             ▼
-                       [ Optical Camera Scan / File Upload ]
+                      [ Optical Camera Scan / File Upload ]
                              │
-                             ▼
-                       [ LAB CLAHE Lighting Normalization ]
+                      [ LAB CLAHE Lighting Normalization ]
                              │
-                             ▼
-                       [ 512-D FaceNet Vector Embedding ]
+                      [ 160×160 Resize & 512-D FaceNet Vector ]
                              │
-                             ▼
-                       [ Cosine Distance Verification ]
+                      [ Cosine Distance Verification ]
                              │
                    ┌─────────┴─────────┐
-                   ▼                   ▼
             Distance < 0.60     Distance ≥ 0.60
             (Identity Match)   (Identity Mismatch)
                    │                   │
-                   ▼                   ▼
-          [ SHA-256 DID Token ] [ Block Transaction ]
-
+            [ 16-Char SHA-256 ] [ Block Transaction ]
+                DID Token
+                   │
+            [ Solana Devnet RPC ]
+            (getLatestBlockhash)
+                   │
+            [ On-Chain Settlement & ]
+            [ Solana Explorer Tx Link ]
 ```
 
 ---
 
 ## Key Features
 1. **Lazy-Loaded Asset Core:** Heavy machine learning models (TensorFlow, Keras-FaceNet, Pandas) are deferred behind an interactive standby gate to prevent startup delays and Streamlit WebSocket timeouts.
+  
 2. **Behavioral Risk Engine:** Evaluates a 30-dimensional feature vector from transaction records using a pre-trained Deep Neural Network (fraud_detection_model.h5) to generate a continuous risk score between $0.0000$ and $1.0000$.
+  
 3. **CLAHE Computer Vision Enhancement:** Pre-processes optical images by converting RGB frames to the LAB color space and applying Contrast Limited Adaptive Histogram Equalization (CLAHE) to the Luminance ($L$) channel (clip limit 3.0, grid size $8 \times 8$) to normalize lighting variations.
+
 4. **FaceNet Vector Embeddings:** Resizes live and reference images to $160 \times 160$ pixels and extracts 512-dimensional normalized feature embeddings via Keras-FaceNet.  Cosine Distance Identity Matching: Calculates spatial Cosine Distance between stored reference profiles and live optical captures:
 
 $$D_{cosine}(u, v) = 1 - \frac{u \cdot v}{\Vert{}u\Vert{}_2 \Vert{}v\Vert{}_2}$$
@@ -63,6 +61,12 @@ $$D_{cosine}(u, v) = 1 - \frac{u \cdot v}{\Vert{}u\Vert{}_2 \Vert{}v\Vert{}_2}$$
 An identity match is confirmed if $D_{cosine} < 0.60$. 
 
 5. **Ephemeral DID Token Emission:** Generates a unique 16-character SHA-256 hash combined with a temporal timestamp upon successful identity verification.
+
+An identity match is confirmed if $D_{\text{cosine}} < 0.60$.   
+
+6. **Ephemeral DID Token & Solana Devnet Broadcaster:** Upon successful verification, generates a 16-character SHA-256 hashed DID token. Queries the Solana Devnet RPC endpoint (api.devnet.solana.com) for the latest blockhash and constructs a deterministic, on-chain verification transaction explorer link.
+
+7. **Solana Anchor On-Chain Verifier:** Integrates a Rust-based Anchor program (programs/biometric-did-verifier/src/lib.rs) for decentralized, zero-leakage cross-chain state verification.
 
 ---
 
@@ -81,25 +85,33 @@ An identity match is confirmed if $D_{cosine} < 0.60$.
 6. scipy
 7. tensorflow
 8. keras-facenet
+9. requests
 
 ---
 
 ## Project Directory Structure
 To run biometric_did.py successfully, organize your directory according to the relative file paths referenced in the code:
-```
+
+```text
 .
+├── Anchor.toml                                # Solana Anchor framework configuration
 ├── data/
-│   └── creditcard.csv                 # Transaction dataset (30 PCA features)
+│   └── creditcard.csv                         # Transaction dataset (30 PCA features)
 ├── output/
 │   └── model/
-│       └── fraud_detection_model.h5   # Pre-trained TensorFlow model
-├── sample_images/
-│   ├── male/
-│   │   └── male_stored.jpg            # Reference male identity profile
-│   └── female/
-│       └── female_stored.jpg          # Reference female identity profile
-└── src/
-    └── biometric_did.py               # Main Streamlit application
+│       └── fraud_detection_model.h5           # Pre-trained TensorFlow model
+├── programs/
+│   └── biometric-did-verifier/
+│       └── src/
+│           └── lib.rs                         # Solana Anchor on-chain verifier program
+├── research/
+│   ├── biometric_did.py                       # Main Streamlit application & DID pipeline
+│   └── fraud-detection-pipeline.ipynb         # Model training & evaluation notebook
+└── sample_images/
+    ├── male/
+    │   └── male_stored.jpg                    # Reference male identity profile
+    └── female/
+        └── female_stored.jpg                  # Reference female identity profile
 ```
 
 ---
@@ -134,19 +146,23 @@ To run biometric_did.py successfully, organize your directory according to the r
    - High Risk ($T_{risk} \ge 0.30$): Displays a "HIGH RISK" warning and triggers the step-up "AI Facial Verification" challenge.
 4. **Biometric Scan & Verification:** Capture a face photo via camera input and click "Run AI Verification".
 5. **Token Generation:** If spatial distance $D_{cosine} < 0.60$, identity is confirmed, and a 16-character DID authorization token is emitted.
+6. **On-Chain Settlement:** The helper function queries `api.devnet.solana.com` for the latest blockhash, constructs a deterministic transaction signature, and outputs an interactive Solana Explorer URL.
 
 ---
 
 ## Thresholds & Parameters Summary
+
 | Pipeline Stage | Parameter / Metric | Configured Value | Function |
-| -------------- | ------------------ | ---------------- | -------- |
-| Risk Scoring | Risk Decision Threshold ($T_{risk}$) | 0.30 | Triggers step-up biometric challenge if $T_{risk} \ge 0.30$ |
-| CLAHE Normalization |	Clip Limit | 3.0 | Controls local contrast enhancement in LAB space |
-| CLAHE Normalization | Tile Grid Size |	8 x 8 | Defines grid matrix size for local histogram balancing |
-| Image Pre-processing | Model Input Dimensions | 160 x 160 | Resizes RGB images to FaceNet input specifications |
-| Biometric Embedding | Vector Dimensionality |	512-D | Spatial feature vector extracted per facial frame |
-| Identity Decision Gate | Cosine Distance Cutoff ($T_{bio}$) | 0.60 | Identity confirmed if $D_{cosine} < 0.60$ |
-|DID Generation | Token Hash Format |	SHA-256 (16 chars) | Generates verifiable ephemeral session token |
+| :--- | :--- | :--- | :--- |
+| **Risk Scoring** | Risk Decision Threshold ($T_{\text{risk}}$) | `0.30` | Triggers step-up biometric challenge if $T_{\text{risk}} \ge 0.30$ |
+| **Fraud Override** | Ground-Truth Fraud Floor | `0.9991` | Forces high-risk challenge if dataset Ground-Truth Class = 1 |
+| **CLAHE Normalization** | Clip Limit | `3.0` | Controls local contrast enhancement in LAB space |
+| **CLAHE Normalization** | Tile Grid Size | `8 x 8` | Defines grid matrix size for local histogram balancing |
+| **Image Pre-processing** | Model Input Dimensions | `160 x 160` | Resizes RGB images to FaceNet input specifications |
+| **Biometric Embedding** | Vector Dimensionality | `512-D` | Spatial feature vector extracted per facial frame |
+| **Identity Decision Gate**| Cosine Distance Cutoff ($T_{\text{bio}}$) | `0.60` | Identity confirmed if $D_{\text{cosine}} < 0.60$ |
+| **DID Generation** | Token Hash Format | `SHA-256 (16 chars)` | Generates verifiable ephemeral session token |
+| **Solana Settlement** | RPC Network Endpoint | `api.devnet.solana.com` | Queries Devnet RPC for on-chain blockhash & settlement |
 
 ---
 
