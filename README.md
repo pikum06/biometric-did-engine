@@ -50,17 +50,15 @@ The application executes a multi-stage risk-adaptive verification and on-chain b
 ## Key Features
 1. **Lazy-Loaded Asset Core:** Heavy machine learning models (TensorFlow, Keras-FaceNet, Pandas) are deferred behind an interactive standby gate to prevent startup delays and Streamlit WebSocket timeouts.
   
-2. **Behavioral Risk Engine:** Evaluates a 30-dimensional feature vector from transaction records using a pre-trained Deep Neural Network (fraud_detection_model.h5) to generate a continuous risk score between $0.0000$ and $1.0000$.
+2. **30-D Behavioral Risk Engine:** Evaluates a 30-dimensional feature vector from transaction records using a pre-trained Deep Neural Network (fraud_detection_model.h5) to generate a continuous risk score between $0.0000$ and $1.0000$, triggering step-up verification at risk thresholds $\ge 0.30$.
   
-3. **CLAHE Computer Vision Enhancement:** Pre-processes optical images by converting RGB frames to the LAB color space and applying Contrast Limited Adaptive Histogram Equalization (CLAHE) to the Luminance ($L$) channel (clip limit 3.0, grid size $8 \times 8$) to normalize lighting variations.
+3. **CLAHE LAB Computer Vision Normalization:** Pre-processes optical images by converting RGB frames to the LAB color space and applying Contrast Limited Adaptive Histogram Equalization (CLAHE) to the Luminance ($L$) channel (clip limit 3.0, grid size $8 \times 8$) to normalize shadows and ambient lighting variations.
 
-4. **FaceNet Vector Embeddings:** Resizes live and reference images to $160 \times 160$ pixels and extracts 512-dimensional normalized feature embeddings via Keras-FaceNet.  Cosine Distance Identity Matching: Calculates spatial Cosine Distance between stored reference profiles and live optical captures:
+4. **512-D FaceNet Vector Embeddings:** Resizes live and reference images to $160 \times 160$ pixels and extracts 512-dimensional normalized feature embeddings via Keras-FaceNet. 
+
+5. **Spatial Cosine Distance Matching:** Calculates spatial Cosine Distance between stored reference profiles and live optical captures:
 
 $$D_{cosine}(u, v) = 1 - \frac{u \cdot v}{\Vert{}u\Vert{}_2 \Vert{}v\Vert{}_2}$$
-
-An identity match is confirmed if $D_{cosine} < 0.60$. 
-
-5. **Ephemeral DID Token Emission:** Generates a unique 16-character SHA-256 hash combined with a temporal timestamp upon successful identity verification.
 
 An identity match is confirmed if $D_{\text{cosine}} < 0.60$.   
 
