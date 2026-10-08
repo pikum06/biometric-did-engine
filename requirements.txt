@@ -1,0 +1,9 @@
+streamlit>=1.28.0
+opencv-python-headless>=4.8.0
+numpy>=1.23.5
+pandas>=2.0.0
+pillow>=9.5.0
+scipy>=1.10.0
+tensorflow>=2.13.0
+keras-facenet>=0.3.2
+requests>=2.31.0
