@@ -12,9 +12,9 @@ from PIL import Image
 
 # Import TEE verification and key derivation function from prototype.py
 try:
-    from research.tee import tee_enclave_key
+    from tee import tee_enclave_key
 except ImportError:
-    from research.tee import tee_enclave_key  # Fallback if running standalone
+    from tee import tee_enclave_key  # Fallback if running standalone
 
 # Integrating with solana devnet broadcaster helper
 
