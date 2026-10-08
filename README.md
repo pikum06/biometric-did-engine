@@ -3,7 +3,7 @@
 
 **ABOUT**
 
-An interactive Web3 authentication gateway built with Streamlit. This application orchestrates a **30-D AI Behavioral Fraud Engine** alongside a **CLAHE-enhanced FaceNet Biometric Core** (512-D embeddings) and a **Hardware-Isolated TEE Enclave Module** (`tee.py`) for HMAC-SHA256 biometric salting. It provides dynamic, risk-adapted authentication for Decentralized Identity (DID) token emission, deterministic cross-chain key derivation (Solana Ed25519 & EVM SECP256k1), and on-chain settlement via Solana Devnet RPC and Rust Anchor smart contracts.
+An interactive Web3 authentication gateway built with Streamlit. This application orchestrates a **AI Behavioral Fraud Engine** alongside a **CLAHE-enhanced FaceNet Biometric Core** (512-D embeddings) and a **Hardware-Isolated TEE Enclave Module** (`tee.py`) for HMAC-SHA256 biometric salting. It provides dynamic, risk-adapted authentication for Decentralized Identity (DID) token emission, deterministic cross-chain key derivation (Solana Ed25519 & EVM SECP256k1), and on-chain settlement via Solana Devnet RPC and Rust Anchor smart contracts.
 
 ---
 
