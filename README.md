@@ -188,9 +188,9 @@ Initially, the system detects low risk and shares pre-approval scores as shown i
 
 2. **Picture2.png**
 
-![High Risk Adaptive Challenge](dashboard_outcomes/Picture2.png)
+![High Risk Adaptive Challenge](dashboard_outcomes/Picture_2.png)
 
-Once high-risk transaction ID is entered, the system first detects the behavioral Risk Score (0.9992), as shown above and triggered high risk asking for AI face detection and an Adaptive Biometric Challenge. Upon detecting the face, the system successfully validates identity a stored ledger identity with high confidence. The use of FaceNet architecture allows for hardware-agnostic deployment, ensuring institutional security remains consistent across varied mobile and desktop interfaces.
+When a high-risk transaction ID is evaluated (e.g., Transaction ID `623`), the system computes a Behavioral Risk Score of **0.9991**, exceeding the $0.30$ threshold and triggering an Adaptive Biometric Challenge. The FaceNet optical engine matches the live facial capture against the stored ledger template with a Cosine Distance of **0.3002** (below the $0.60$ decision boundary). Upon identity confirmation, the system emits an ephemeral 16-character DID token (`e552de05ffc37f10`) and executes local TEE salting to output deterministic cross-chain seeds for **Solana Ed25519** and **EVM SECP256k1**, ensuring hardware-bound proof-of-personhood without on-chain biometric leakage.
 
 3. **Picture3.png**
 
