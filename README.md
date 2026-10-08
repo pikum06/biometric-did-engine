@@ -55,7 +55,7 @@ The application executes a multi-stage risk-adaptive verification and on-chain b
 ## Key Features
 1. **Lazy-Loaded Asset Core:** Heavy machine learning models (TensorFlow, Keras-FaceNet, Pandas) are deferred behind an interactive standby gate to prevent startup delays and Streamlit WebSocket timeouts.
   
-2. **Behavioral Risk Engine:** Evaluates a 30-dimensional feature vector from transaction records using a pre-trained Deep Neural Network (fraud_detection_model.h5) to generate a continuous risk score between $0.0000$ and $1.0000$, triggering step-up verification at risk thresholds $\ge 0.30$.
+2. **Behavioral Risk Engine:** Evaluates a feature vector from transaction records using a pre-trained Deep Neural Network (`fraud_detection_model.h5`) to generate a continuous risk score between $0.0000$ and $1.0000$, triggering step-up verification at risk thresholds $\ge 0.30$.
   
 3. **CLAHE LAB Computer Vision Normalization:** Pre-processes optical images by converting RGB frames to the LAB color space and applying Contrast Limited Adaptive Histogram Equalization (CLAHE) to the Luminance ($L$) channel (clip limit 3.0, grid size $8 \times 8$) to normalize shadows and ambient lighting variations.
 
