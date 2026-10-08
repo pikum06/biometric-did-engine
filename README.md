@@ -1,8 +1,9 @@
 # Risk-Adaptive Biometric Decentralized Identity (DID) Engine
 
----
 
-An interactive Web3 authentication gateway built with Streamlit. This application orchestrates an __AI Behavioral Fraud Engine with a FaceNet Biometric Verification Core__ to provide dynamic, risk-adapted authentication for Decentralized Identity (DID) token emission.
+**ABOUT**
+
+An interactive Web3 authentication gateway built with Streamlit. This application orchestrates a **30-D AI Behavioral Fraud Engine** alongside a **CLAHE-enhanced FaceNet Biometric Core** (512-D embeddings) and a **Hardware-Isolated TEE Enclave Module** (`tee.py`) for HMAC-SHA256 biometric salting. It provides dynamic, risk-adapted authentication for Decentralized Identity (DID) token emission, deterministic cross-chain key derivation (Solana Ed25519 & EVM SECP256k1), and on-chain settlement via Solana Devnet RPC and Rust Anchor smart contracts.
 
 ---
 
@@ -35,14 +36,18 @@ The application executes a multi-stage risk-adaptive verification and on-chain b
             Distance < 0.60     Distance ≥ 0.60
             (Identity Match)   (Identity Mismatch)
                    │                   │
-            [ 16-Char SHA-256 ] [ Block Transaction ]
-                DID Token
+      [ TEE Hardware Enclave ]   [ Block Transaction ]
+      [  HMAC-SHA256 Salting ]
                    │
-            [ Solana Devnet RPC ]
-            (getLatestBlockhash)
+      [ Dual Cross-Chain Keys ]
+      (Ed25519 / SECP256k1 Seeds)
                    │
-            [ On-Chain Settlement & ]
-            [ Solana Explorer Tx Link ]
+      [ 16-Char SHA-256 DID Token ]
+                   │
+      [ Solana Devnet RPC Broadcaster ]
+           (getLatestBlockhash)
+                   │
+      [ On-Chain Settlement & Explorer Link ]
 ```
 
 ---
@@ -56,23 +61,20 @@ The application executes a multi-stage risk-adaptive verification and on-chain b
 
 4. **512-D FaceNet Vector Embeddings:** Resizes live and reference images to $160 \times 160$ pixels and extracts 512-dimensional normalized feature embeddings via Keras-FaceNet. 
 
-5. **Spatial Cosine Distance Matching:** Calculates spatial Cosine Distance between stored reference profiles and live optical captures:
+5. **Hardware-Bound TEE Biometric Salting (`tee.py`)**: Salts raw 512-D biometric embedding byte arrays inside a local Trusted Execution Environment (TEE) enclave using HMAC-SHA256 bound to a unique hardware silicon identifier (`SECURE_ENCLAVE_SILICON_7789A`).
+6.  **Deterministic Cross-Chain Key Derivation**: Uses purpose-based TEE master salts (`solana_ed25519_purpose_0` and `evm_secp256k1_purpose_1`) to deterministically derive non-linkable seed pairs for Solana (Ed25519) and Ethereum/EVM (SECP256k1) keychains. 
 
-$$D_{cosine}(u, v) = 1 - \frac{u \cdot v}{\Vert{}u\Vert{}_2 \Vert{}v\Vert{}_2}$$
+7. **Ephemeral DID Token & Solana Devnet Settlement**: Generates a 16-character SHA-256 hashed DID token, queries `api.devnet.solana.com` for the latest blockhash, and broadcasts an on-chain verification transaction with interactive explorer tracking.
 
-An identity match is confirmed if $D_{\text{cosine}} < 0.60$.   
-
-6. **Ephemeral DID Token & Solana Devnet Broadcaster:** Upon successful verification, generates a 16-character SHA-256 hashed DID token. Queries the Solana Devnet RPC endpoint (api.devnet.solana.com) for the latest blockhash and constructs a deterministic, on-chain verification transaction explorer link.
-
-7. **Solana Anchor On-Chain Verifier:** Integrates a Rust-based Anchor program (programs/biometric-did-verifier/src/lib.rs) for decentralized, zero-leakage cross-chain state verification.
+8. **Solana Anchor On-Chain Verifier**: Integrates a Rust Anchor program (`programs/biometric-did-verifier/src/lib.rs`) for decentralized, zero-leakage cross-chain state verification.
 
 ---
 
 ## System Requirements & Dependencies
 
 1. Python Version: Python 3.9 – 3.11
-
-2. Hardware: Webcam access for live facial optical capture
+2. **Hardware**: Webcam / camera access for live facial optical capture
+3. **Hardware Enclave**: Local TEE simulation via `research/tee.py`
 
 ## Dependencies 
 1. streamlit
@@ -88,13 +90,20 @@ An identity match is confirmed if $D_{\text{cosine}} < 0.60$.
 ---
 
 ## Project Directory Structure
-To run biometric_did.py successfully, organize your directory according to the relative file paths referenced in the code:
+
+To run `biometric_did.py` successfully, organize your directory according to the relative file paths referenced in the code:
+
 
 ```text
 .
 ├── Anchor.toml                                # Solana Anchor framework configuration
-├── data/
-│   └── creditcard.csv                         # Transaction dataset (30 PCA features)
+├── .gitignore                                 # Git ignore rules
+├── README.md                                  # Project documentation
+├── requirements.txt                           # Python environment dependencies
+├── dashboard_outcomes/                        # Visual outcome exhibits & dashboard screenshots
+│   ├── Picture1.png
+│   ├── Picture2.png
+│   └── Picture3.png
 ├── output/
 │   └── model/
 │       └── fraud_detection_model.h5           # Pre-trained TensorFlow model
@@ -104,7 +113,7 @@ To run biometric_did.py successfully, organize your directory according to the r
 │           └── lib.rs                         # Solana Anchor on-chain verifier program
 ├── research/
 │   ├── biometric_did.py                       # Main Streamlit application & DID pipeline
-│   └── fraud-detection-pipeline.ipynb         # Model training & evaluation notebook
+│   └── tee.py                                 # TEE enclave HMAC salting & key derivation
 └── sample_images/
     ├── male/
     │   └── male_stored.jpg                    # Reference male identity profile
@@ -132,7 +141,7 @@ To run biometric_did.py successfully, organize your directory according to the r
 
 5. **Running the Application**
 * Launch the interface using Streamlit:
-    * `streamlit run src/biometric_did.py`
+    * `streamlit run biometric_did.py`
 
 ---
 
@@ -143,8 +152,8 @@ To run biometric_did.py successfully, organize your directory according to the r
    - Low Risk ($T_{risk} < 0.30$): Displays a "LOW RISK: Transaction Pre-Approved" banner and bypasses biometric challenges.
    - High Risk ($T_{risk} \ge 0.30$): Displays a "HIGH RISK" warning and triggers the step-up "AI Facial Verification" challenge.
 4. **Biometric Scan & Verification:** Capture a face photo via camera input and click "Run AI Verification".
-5. **Token Generation:** If spatial distance $D_{cosine} < 0.60$, identity is confirmed, and a 16-character DID authorization token is emitted.
-6. **On-Chain Settlement:** The helper function queries `api.devnet.solana.com` for the latest blockhash, constructs a deterministic transaction signature, and outputs an interactive Solana Explorer URL.
+5. **TEE Salting & Cross-Chain Key Derivation:** If $D_{\text{cosine}} < 0.60$, `tee.py` passes the raw 512-D embedding to the enclave, computes a hardware-bound HMAC-SHA256 master salt, and derives 32-hex Ed25519 (Solana) and SECP256k1 (EVM) seed keys.
+6. **DID Token Emission & Solana Settlement:** Generates a 16-character SHA-256 DID token, queries `api.devnet.solana.com` for the latest blockhash, broadcasts the transaction, and renders interactive keys and Solana Explorer links on-screen.
 
 ---
 
@@ -159,6 +168,11 @@ To run biometric_did.py successfully, organize your directory according to the r
 | **Image Pre-processing** | Model Input Dimensions | `160 x 160` | Resizes RGB images to FaceNet input specifications |
 | **Biometric Embedding** | Vector Dimensionality | `512-D` | Spatial feature vector extracted per facial frame |
 | **Identity Decision Gate**| Cosine Distance Cutoff ($T_{\text{bio}}$) | `0.60` | Identity confirmed if $D_{\text{cosine}} < 0.60$ |
+| **TEE Enclave** | Silicon Device UID | `SECURE_ENCLAVE_SILICON_7789A` | Hardware secret key bound to HMAC salting |
+| **TEE Key Derivation** | Derivation Digest Algorithm | `HMAC-SHA256` | Master salt & seed derivation algorithm |
+| **Solana Key Domain** | Purpose Purpose String | `solana_ed25519_purpose_0` | Deterministic Ed25519 seed derivation |
+| **EVM Key Domain** | Purpose Purpose String | `evm_secp256k1_purpose_1` | Deterministic SECP256k1 seed derivation |
+| **Derived Key Output** | Key Seed Length | `32 hex characters` | Derived Ed25519 and SECP256k1 key seeds |
 | **DID Generation** | Token Hash Format | `SHA-256 (16 chars)` | Generates verifiable ephemeral session token |
 | **Solana Settlement** | RPC Network Endpoint | `api.devnet.solana.com` | Queries Devnet RPC for on-chain blockhash & settlement |
 
