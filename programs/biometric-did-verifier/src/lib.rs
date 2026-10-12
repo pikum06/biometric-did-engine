@@ -1,44 +1,47 @@
 use anchor_lang::prelude::*;
+use groth16_solana::groth16::Groth16Verifier;
 
 declare_id!("BioDID1111111111111111111111111111111111111");
 
 #[program]
-pub mod biometric_did_verifier {
+pub mod bio_did_verifier {
     use super::*;
 
-    pub fn verify_did_token(ctx: Context<VerifyToken>, did_token: String, risk_score: u16) -> Result<()> {
-        require!(did_token.len() == 16, ErrorCode::InvalidTokenLength);
+    pub fn verify_zk_did(
+        ctx: Context<VerifyZkDid>,
+        proof_a: [u8; 64],
+        proof_b: [u8; 128],
+        proof_c: [u8; 64],
+        public_inputs: [[u8; 32]; 2],
+    ) -> Result<()> {
+        // Load compiled Verifying Key generated from Noir/Barretenberg compile
+        let vk = include_bytes!("../verifying_key.bin");
+
+        let mut verifier = Groth16Verifier::new(
+            &proof_a,
+            &proof_b,
+            &proof_c,
+            &public_inputs,
+            vk,
+        ).map_err(|_| ErrorCode::InvalidProof)?;
+
+        verifier.verify().map_err(|_| ErrorCode::ProofVerificationFailed)?;
         
-        msg!("Biometric DID Token Verified on Solana Devnet: {}", did_token);
-        msg!("Behavioral Risk Score: {}/10000", risk_score);
-
-        emit!(DidVerifiedEvent {
-            verifier: *ctx.accounts.verifier.key,
-            did_token,
-            risk_score,
-            timestamp: Clock::get()?.unix_timestamp,
-        });
-
+        msg!("zk-SNARK Attestation Validated On-Chain.");
         Ok(())
     }
 }
 
 #[derive(Accounts)]
-pub struct VerifyToken<'info> {
+pub struct VerifyZkDid<'info> {
     #[account(mut)]
     pub verifier: Signer<'info>,
 }
 
-#[event]
-pub struct DidVerifiedEvent {
-    pub verifier: Pubkey,
-    pub did_token: String,
-    pub risk_score: u16,
-    pub timestamp: i64,
-}
-
 #[error_code]
 pub enum ErrorCode {
-    #[msg("DID Token must be exactly 16 characters.")]
-    InvalidTokenLength,
+    #[msg("Invalid Groth16 Proof Format")]
+    InvalidProof,
+    #[msg("Proof Verification Failed")]
+    ProofVerificationFailed,
 }

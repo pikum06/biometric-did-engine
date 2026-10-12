@@ -7,21 +7,23 @@ import os
 import hashlib
 import time
 import requests
-from PIL import Image
 
+# Import external computer vision and AI libraries from image_analysis.py
 
-# Import TEE verification and key derivation function from prototype.py
 try:
-    from tee import tee_enclave_key
+    from image_analysis import image_biometrics
+    
 except ImportError:
-    from tee import tee_enclave_key  # Fallback if running standalone
+    
+    # Fallback if running standalone
+    from research.biometric_did import image_biometrics  
 
-# Integrating with solana devnet broadcaster helper
+# 1. Integrating with solana devnet broadcaster helper
 
-def broadcast_to_solana_devnet(did_token: str, risk_score: float):
+def broadcast_to_solana_devnet(did_token: str):
     """
-    Broadcasts the 16-character DID token to Solana Devnet RPC
-    and generates an on-chain verification transaction explorer link.
+    Queries Solana Devnet RPC for latest blockhash and generates
+    a valid Base58 Devnet Program Explorer link.
     """
     devnet_url = "https://api.devnet.solana.com"
     headers = {"Content-Type": "application/json"}
@@ -40,79 +42,24 @@ def broadcast_to_solana_devnet(did_token: str, risk_score: float):
         
         # Construct deterministic Devnet transaction signature for tracking
 
-        tx_signature = hashlib.sha256(f"{did_token}:{blockhash}:{time.time()}".encode()).hexdigest()
-        explorer_url = f"https://explorer.solana.com/tx/{tx_signature}?cluster=devnet"
+        program_id = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
+        explorer_url = f"https://explorer.solana.com/address/{program_id}?cluster=devnet"
         
         return {
             "status": "Success",
             "blockhash": blockhash,
-            "tx_signature": tx_signature,
+            "did_token": did_token,
             "explorer_url": explorer_url
         }
     except Exception as e:
-        program_url = "https://explorer.solana.com/address/BioDID1111111111111111111111111111111111111?cluster=devnet"
+        program_url = "https://explorer.solana.com/address/MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr?cluster=devnet"
         return {
-            "status": "DEVNET_FALLBACK",
+            "status": "Devnet Failed",
             "error": str(e),
             "explorer_url": program_url
         }
 
-# 1. CORE BIOMETRIC ENGINE
-def verify_biometrics(live_file, stored_path, embedder):
-    
-    "Using FaceNet embeddings to compare faces with Cosine Distance."
-    
-    import cv2
-    import numpy as np
-    from scipy.spatial import distance
-    
-    try:
-        if live_file is None:
-            return 2.0, None
-        
-        # Loading and convert images to RGB
-
-        img_stored = cv2.imread(stored_path)
-        if img_stored is None:
-            st.error(f"Could not read stored image at {stored_path}")
-            return 2.0, None
-            
-        img_stored = cv2.cvtColor(img_stored, cv2.COLOR_BGR2RGB)
-        live_img = Image.open(live_file)
-        img_live = np.array(live_img.convert('RGB'))
-
-        # AI LIGHTING NORMALIZATION (CLAHE)
-
-        img_live_cv = cv2.cvtColor(img_live, cv2.COLOR_RGB2LAB)
-        l, a, b = cv2.split(img_live_cv)
-        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
-        cl = clahe.apply(l)
-        img_live_cv = cv2.merge((cl,a,b))
-        img_live = cv2.cvtColor(img_live_cv, cv2.COLOR_LAB2RGB)
-        
-        # Resize to FaceNet standard (160x160)
-
-        img_stored = cv2.resize(img_stored, (160, 160))
-        img_live = cv2.resize(img_live, (160, 160))
-        
-        # Generating 512-D Embeddings
-
-        emb_stored = embedder.embeddings(np.expand_dims(img_stored, axis=0)).flatten()
-        emb_live = embedder.embeddings(np.expand_dims(img_live, axis=0)).flatten()
-
-        # Generate deterministic un-linkable key pairs inside local TEE simulation
-        
-        derived_keys = tee_enclave_key(emb_live)
-        
-        # Calculate Cosine Distance
-
-        dist = distance.cosine(emb_stored, emb_live)
-        return dist, derived_keys 
-    except Exception as e:
-        st.error(f"AI Embedding Error: {e}")
-        return 2.0, None
-
-# 2. INITIALIZATION & ASSET LOADING
+# 2. Initializing and asset loading
 
 st.set_page_config(page_title="Risk-Adaptive Biometric DID", layout="wide")
 
@@ -149,7 +96,7 @@ def load_all_assets():
     
     return facenet_ai, nn_model, dataframe
 
-# 3. THE INITIALIZATION SCREEN 
+# 3. The initial screen
 
 if not st.session_state.models_loaded:
     st.title("Risk-Adaptive Biometric DID System")
@@ -164,7 +111,7 @@ if not st.session_state.models_loaded:
             st.rerun()
     st.stop()
 
-# 4. MAIN INTERFACE 
+# 4. Main interface 
  
 embedder = st.session_state.embedder
 fraud_model = st.session_state.fraud_model
@@ -222,21 +169,21 @@ if risk_score >= 0.3:
     
     if st.button("Run AI Verification"):
         if img_file is not None:
-            with st.spinner("Salting biometric in Local TEE & Broadcasting to Solana Devenet"):
-                dist_score, derived_keys = verify_biometrics(img_file, stored_path, embedder)
+            with st.spinner("Salting biometric in Local TEE & & Generating zk-SNARK Proof"):
+                dist_score, derived_keys, zk_proof = image_biometrics(img_file, stored_path, embedder)
                 if dist_score < 0.60 and derived_keys is not None:
                     token_hash = hashlib.sha256(str(time.time()).encode()).hexdigest()[:16]
-                    solana_broadcast = broadcast_to_solana_devnet(token_hash, risk_score)
+                    solana_broadcast = broadcast_to_solana_devnet(token_hash)
 
                     st.session_state.verification_results = {
                         "verified": True,
+                        "dist_score": dist_score,
                         "hash": token_hash,
                         "solana_key": derived_keys["solana_ed25519_seed"],
                         "evm_key": derived_keys["evm_secp256k1_seed"],
+                        "zk_proof": zk_proof,
                         "solana_broadcast": solana_broadcast
                     }
-                    st.success(f"IDENTITY MATCHED. Cosine Distance: {dist_score:.4f}")
-                    st.balloons()
                 else:
                     st.error(f"IDENTITY MISMATCH. Cosine Distance: {dist_score:.4f}")
                     st.session_state.verification_results = None
@@ -245,17 +192,44 @@ if risk_score >= 0.3:
 
     if st.session_state.verification_results:
         res = st.session_state.verification_results
-        st.success(f"CONFIRMED | DID Token: {res['hash']}")
 
-        c_k1, c_k2 = st.columns(2)
-        with c_k1:
-            st.info(f"Solana Ed25519 Key (TEE Derived): {res['solana_key']}")
-        with c_k2:
-            st.info(f"EVM SECP256k1 Key (TEE Derived): {res['evm_key']}")
+        # Row 1 of 2x2 Grid: Status Cards
 
-        if "solana" in res:
-            sol=res["Solana"]
-            st.markdown(f"**Solana Devnet Broadcast Explorer:** [{sol['explorer_url']}]({sol['explorer_url']})")
+        c_r1_1, c_r1_2 = st.columns(2)
+        with c_r1_1:
+            st.success(f"Identity matched. Cosine Distance: {res.get('dist_score', 0.0):.4f}")
+        with c_r1_2:
+            st.success(f"Confirmed | DID Token: {res['hash']}")
+
+        # Row 2 of 2x2 Grid: Blue Key Derivation Cards
+        c_r2_1, c_r2_2 = st.columns(2)
+        with c_r2_1:
+            st.info(f"Solana Ed25519 Key (TEE Derived): `{res['solana_key']}`")
+        with c_r2_2:
+            st.info(f"EVM SECP256k1 Key (TEE Derived): `{res['evm_key']}`")
+
+        st.divider()
+
+        # Side-by-side column for displaying zk-proof and solana devnetbroadcast result
+
+        col_zk, col_sol = st.columns(2)
+        with col_zk:
+            st.subheader("Zero-Knowledge Proof Generation")
+            if res.get("zk_proof"):
+                st.json(res["zk_proof"])
+            else:
+                st.warning("No zk-proof generated.")
+
+        with col_sol:
+            st.subheader("Solana Devnet Broadcast Result")
+            if res.get("solana_broadcast"):
+                sol = res["solana_broadcast"]
+                st.info(f"**Broadcast Status:** `{sol.get('status', 'Success')}`")
+                if "blockhash" in sol:
+                    st.info(f"**Finalized Blockhash:** `{sol['blockhash']}`")
+                st.markdown(f"**Solana Devnet Explorer:** [{sol['explorer_url']}]({sol['explorer_url']})")
+            else:
+                st.warning("No Solana broadcast result available.")  
 else:
     with col_s:
         st.success("LOW RISK: Transaction Pre-Approved")
