@@ -6,61 +6,24 @@ import streamlit as st
 import os
 import hashlib
 import time
-import requests
+
 
 # Import external computer vision and AI libraries from image_analysis.py
 
 try:
     from image_analysis import image_biometrics
-    
+    from solana import solana_devnet_broadcast
+    from assets import load_all_assets
+    from risk_engine import transaction_risk
 except ImportError:
     
     # Fallback if running standalone
-    from research.biometric_did import image_biometrics  
+    from research.biometric_did import image_biometrics
+    from research.solana import solana_devnet_broadcast
+    from research.assets import load_all_assets
+    from research.risk_engine import transaction_risk  
 
-# 1. Integrating with solana devnet broadcaster helper
-
-def broadcast_to_solana_devnet(did_token: str):
-    """
-    Queries Solana Devnet RPC for latest blockhash and generates
-    a valid Base58 Devnet Program Explorer link.
-    """
-    devnet_url = "https://api.devnet.solana.com"
-    headers = {"Content-Type": "application/json"}
-    
-    payload = {
-        "jsonrpc": "2.0",
-        "id": 1,
-        "method": "getLatestBlockhash",
-        "params": [{"commitment": "finalized"}]
-    }
-    
-    try:
-        response = requests.post(devnet_url, json=payload, headers=headers, timeout=5)
-        res_data = response.json()
-        blockhash = res_data["result"]["value"]["blockhash"]
-        
-        # Construct deterministic Devnet transaction signature for tracking
-
-        program_id = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
-        explorer_url = f"https://explorer.solana.com/address/{program_id}?cluster=devnet"
-        
-        return {
-            "status": "Success",
-            "blockhash": blockhash,
-            "did_token": did_token,
-            "explorer_url": explorer_url
-        }
-    except Exception as e:
-        program_url = "https://explorer.solana.com/address/MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr?cluster=devnet"
-        return {
-            "status": "Devnet Failed",
-            "error": str(e),
-            "explorer_url": program_url
-        }
-
-# 2. Initializing and asset loading
-
+# 1. Page Configuration & Session State
 st.set_page_config(page_title="Risk-Adaptive Biometric DID", layout="wide")
 
 if "models_loaded" not in st.session_state:
@@ -68,35 +31,7 @@ if "models_loaded" not in st.session_state:
 if "verification_results" not in st.session_state:
     st.session_state.verification_results = None
 
-@st.cache_resource
-def load_all_assets():
-    
-    import pandas as pd
-    import tensorflow as tf
-    from keras_facenet import FaceNet
-    
-    base_path = os.path.dirname(__file__)
-    model_path = os.path.join(base_path, '../output/model/fraud_detection_model.h5')
-    if not os.path.exists(model_path):
-        model_path = os.path.join(base_path, '../output/model/fraud_detection_model.h5')
-
-    csv_path = os.path.join(base_path, '../data/creditcard.csv')
-    if not os.path.exists(csv_path):
-        csv_path = os.path.join(base_path, '../data/creditcard.csv')
-
-    if not os.path.exists(model_path) or not os.path.exists(csv_path):
-        st.error("Files Missing! Ensure '.h5' and '.csv' are in the folder.")
-        st.stop()
-    
-    # Load assets
-
-    nn_model = tf.keras.models.load_model(model_path, compile=False)
-    dataframe = pd.read_csv(csv_path)
-    facenet_ai = FaceNet()
-    
-    return facenet_ai, nn_model, dataframe
-
-# 3. The initial screen
+# 2. The initial screen
 
 if not st.session_state.models_loaded:
     st.title("Risk-Adaptive Biometric DID System")
@@ -111,7 +46,7 @@ if not st.session_state.models_loaded:
             st.rerun()
     st.stop()
 
-# 4. Main interface 
+# 3. Main interface 
  
 embedder = st.session_state.embedder
 fraud_model = st.session_state.fraud_model
@@ -127,19 +62,10 @@ st.sidebar.header("Control Panel")
 tx_index = st.sidebar.number_input("Transaction ID", 0, len(df)-1, value=0)
 user_gender = st.sidebar.selectbox("User Gender", ["Male", "Female"])
 
-# Risk Assessment
+# 4. Risk Assessment
 
-raw_row = df.iloc[[tx_index]].copy()
-features = raw_row.drop(columns=['Class'], errors='ignore').iloc[:, :30]
-sample_tx = features.values.astype('float32').reshape(1, 30)
+risk_score = transaction_risk(df, tx_index, fraud_model)
 
-try:
-    prediction = fraud_model.predict(sample_tx)
-    risk_score = float(prediction[0][0])
-    if df.iloc[tx_index]['Class'] == 1 and risk_score < 0.3:
-        risk_score = 0.9991
-except Exception:
-    risk_score = 0.0
 
 col_m, col_s = st.columns(2)
 with col_m:
@@ -173,7 +99,7 @@ if risk_score >= 0.3:
                 dist_score, derived_keys, zk_proof = image_biometrics(img_file, stored_path, embedder)
                 if dist_score < 0.60 and derived_keys is not None:
                     token_hash = hashlib.sha256(str(time.time()).encode()).hexdigest()[:16]
-                    solana_broadcast = broadcast_to_solana_devnet(token_hash)
+                    solana_broadcast = solana_devnet_broadcast(token_hash)
 
                     st.session_state.verification_results = {
                         "verified": True,
