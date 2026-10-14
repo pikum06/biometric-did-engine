@@ -9,3 +9,4 @@ venv/
 *.Zone.Identifier
 .DS_Store
 data/creditcard.csv
+biometric_did/
