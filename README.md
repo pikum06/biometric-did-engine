@@ -103,42 +103,44 @@ To run `biometric_did.py` successfully, organize your directory according to the
 
 
 ```text
-.
-├── Anchor.toml                            # Solana Anchor framework configuration
-├── .gitignore                             # Git ignore rules
-├── README.md                              # Project documentation
-├── requirements.txt                       # Python environment dependencies
-├── circuits/                              # Noir Zero-Knowledge proof circuits
-│   ├── Nargo.toml                         # Noir circuit metadata
-│   ├── Prover.toml                        # Live witness input storage
+├── Anchor.toml                       # Solana Anchor framework configuration
+├── .gitignore                        # Git ignore rules
+├── README.md                         # Project documentation
+├── requirements.txt                  # Python environment dependencies
+├── circuits/                         # Noir Zero-Knowledge proof circuits
+│   ├── Nargo.toml                    # Noir circuit metadata
+│   ├── Prover.toml                   # Live witness input storage
 │   ├── src/
-│   │   └── main.nr                        # ACIR circuit logic
+│   │   └── main.nr                   # ACIR circuit logic
 │   └── target/
-│       └── circuits.json                  # Compiled ACIR circuit target
-├── dashboard_outcomes/                    # Visual outcome exhibits & dashboard screenshots
-│   ├── Picture1.png                       # Standby initialization & lazy loading gateway
-│   ├── Picture2.png                       # High-risk verification, TEE keys, ZK proof & settlement
-│   ├── Picture3.png                       # Identity mismatch & Sybil prevention alert
-│   └── Picture4.png                       # 2x2 grid UI layout & Devnet Explorer confirmation
-├── data/                                  # Transaction dataset
-│   └── creditcard.csv                     # Credit card transaction features
-├── output/                                # Pre-trained ML models & artifacts
+│       └── circuits.json             # Compiled ACIR circuit target
+├── dashboard_outcomes/               # Visual outcome exhibits & dashboard screenshots
+│   ├── Picture1.png                  # Standby initialization & lazy loading gateway
+│   ├── Picture2.png                  # High-risk verification, TEE keys, ZK proof & settlement
+│   ├── Picture3.png                  # Identity mismatch & Sybil prevention alert
+│   └── Picture4.png                  # 2x2 grid UI layout & Devnet Explorer confirmation
+├── data/                             # Transaction dataset
+│   └── creditcard.csv                # Credit card transaction features
+├── output/                           # Pre-trained ML models & artifacts
 │   └── model/
-│       └── fraud_detection_model.h5       # Pre-trained TensorFlow model
-├── programs/                              # Solana Anchor Rust smart contracts
+│       └── fraud_detection_model.h5  # Pre-trained TensorFlow model
+├── programs/                         # Solana Anchor Rust smart contracts
 │   └── biometric-did-verifier/
 │       └── src/
-│           └── lib.rs                     # Solana Anchor on-chain verifier program
-├── research/                              # Modular Python core
-│   ├── biometric_did.py                   # Main Streamlit application & DID pipeline
-│   ├── image_analysis.py                  # Computer vision & FaceNet feature extraction
-│   ├── tee.py                             # TEE enclave HMAC salting & key derivation
-│   └── zk_prover.py                       # Noir ZK proof generation pipeline
-└── sample_images/                         # Reference facial identity profiles
+│           └── lib.rs                # Solana Anchor on-chain verifier program
+├── research/                         # Modular Python core
+│   ├── assets.py                     # Model & dataset asset loader
+│   ├── biometric_did.py              # Main Streamlit application & DID pipeline
+│   ├── image_analysis.py             # Computer vision & FaceNet feature extraction
+│   ├── risk_engine.py                # Behavioral risk scoring & neural net evaluation
+│   ├── solana.py                     # Solana Devnet RPC network broadcaster
+│   ├── tee.py                        # TEE enclave HMAC salting & key derivation
+│   └── zk_prover.py                  # Noir ZK proof generation pipeline
+└── sample_images/                    # Reference facial identity profiles
     ├── female/
-    │   └── female_stored.jpg              # Reference female identity profile
+    │   └── female_stored.jpg         # Reference female identity profile
     └── male/
-        └── male_stored.jpg                # Reference male identity profile
+        └── male_stored.jpg           # Reference male identity profile
 ```
 
 ---
