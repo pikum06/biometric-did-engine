@@ -233,7 +233,7 @@ Upon identity confirmation, the system renders a persistent $2 \times 2$ grid la
 
 ![Security Mismatch Rejection](dashboard_outcomes/Picture4.png)
 
-When an anomalous high-risk transaction is evaluated (Behavioral Risk Score **0.9992** $\ge 0.30$), the system triggers the step-up **Adaptive Biometric Challenge**. If an unauthorized user attempts verification, the CLAHE-normalized FaceNet engine evaluates the live camera capture against the stored ledger identity profile, yielding a spatial Cosine Distance of **1.1554** (exceeding the $0.60$ decision cutoff). The system outputs a red **"IDENTITY MISMATCH"** alert, immediately revoking session authorization, suppressing TEE key derivation, blocking DID token emission, and halting Solana RPC broadcast to protect Web3 systems against Sybil attacks and identity spoofing.
+When an anomalous high-risk transaction is evaluated (Behavioral Risk Score **0.9991** $\ge 0.30$), the system triggers the step-up **Adaptive Biometric Challenge**. If an unauthorized user attempts verification, the CLAHE-normalized FaceNet engine evaluates the live camera capture against the stored ledger identity profile, yielding a spatial Cosine Distance of **1.1554** (exceeding the $0.60$ decision cutoff). The system outputs a red **"IDENTITY MISMATCH"** alert, immediately revoking session authorization, suppressing TEE key derivation, blocking DID token emission, and halting Solana RPC broadcast to protect Web3 systems against Sybil attacks and identity spoofing.
 
 ---
           
