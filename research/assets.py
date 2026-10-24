@@ -24,9 +24,9 @@ def load_all_assets():
         model_path = os.path.join(base_path, 'output/model/fraud_detection_model.h5')
 
     # Path resolution for transaction dataset
-    csv_path = os.path.join(base_path, '../data/creditcard.csv')
+    csv_path = os.path.join(base_path, '../data/creditcard_cleaned.csv')
     if not os.path.exists(csv_path):
-        csv_path = os.path.join(base_path, 'data/creditcard.csv')
+        csv_path = os.path.join(base_path, 'data/creditcard_cleaned.csv')
 
     if not os.path.exists(model_path) or not os.path.exists(csv_path):
         st.error("Files Missing! Ensure '.h5' model and '.csv' dataset are present in the output/ and data/ folders.")

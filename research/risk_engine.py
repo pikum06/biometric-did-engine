@@ -7,6 +7,10 @@ def transaction_risk(df: pd.DataFrame, tx_index: int, fraud_model) -> float:
     Extracts transaction feature vectors, evaluates them using the trained
     Keras neural network model, and returns the behavioral risk score.
     """
+
+    if tx_index >= len(df):
+        tx_index = len(df) - 1
+
     raw_row = df.iloc[[tx_index]].copy()
     features = raw_row.drop(columns=['Class'], errors='ignore').iloc[:, :30]
     sample_tx = features.values.astype('float32').reshape(1, 30)
